@@ -18,14 +18,18 @@ public:
 	// bool stop();
 	bool reset();
 
+	// Get time since t0
 	bool get_time(std::chrono::nanoseconds* const dt) const;
 
+	// Set alarm time as offset from t0
 	void set_alarm(const std::chrono::nanoseconds& dt);
 
 	bool is_expired(bool* const is_exp);
 
 protected:
 
+	// ABS time of start
 	std::chrono::nanoseconds t0;
+	// ABS time of alarm
 	std::chrono::nanoseconds t1;
 };

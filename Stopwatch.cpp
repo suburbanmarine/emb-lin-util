@@ -31,33 +31,36 @@ bool Stopwatch::reset()
 
 bool Stopwatch::get_time(std::chrono::nanoseconds* const dt) const
 {
-	std::chrono::nanoseconds t1;
-	if( ! Chronometer::get_time(&t1) )
+	std::chrono::nanoseconds t_i;
+	if( ! Chronometer::get_time(&t_i) )
 	{
 		return false;
 	}
 
-	*dt = t1 - t0;
+	if(dt)
+	{
+		*dt = t_i - t0;
+	}
 
 	return true;
 }
 
 void Stopwatch::set_alarm(const std::chrono::nanoseconds& dt)
 {
-	t1 = dt;
+	t1 = dt + t0;
 }
 
 bool Stopwatch::is_expired(bool* const is_exp)
 {
-	std::chrono::nanoseconds dt;
-	if( ! get_time(&dt) )
+	std::chrono::nanoseconds t_i;
+	if( ! Chronometer::get_time(&t_i) )
 	{
 		return false;
 	}
 
 	if(is_exp)
 	{
-		*is_exp = dt <= t1;
+		*is_exp = (t1 <= t_i);
 	}
 
 	return true;
