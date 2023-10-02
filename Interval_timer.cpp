@@ -48,6 +48,8 @@ bool Interval_timer::start(const std::chrono::nanoseconds& dt)
 		return false;
 	}
 
+	reset();
+
 	itimerspec new_val;
 	memset(&new_val, 0, sizeof(new_val));
 
@@ -75,9 +77,6 @@ bool Interval_timer::stop()
 	{
 		return false;
 	}
-
-	m_pending_event_count = 0;
-	m_pending_cancel      = false;
 
 	return true;
 }

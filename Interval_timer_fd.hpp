@@ -10,13 +10,12 @@
 
 #include <signal.h>
 #include <time.h>
+#include <unistd.h>
+#include <fcntl.h>
 
+#include <array>
 #include <atomic>
 #include <chrono>
-
-#include <condition_variable>
-#include <mutex>
-#include <optional>
 
 //
 // A timerfd / epoll based interval timer for linux
@@ -44,7 +43,7 @@ public:
 	void reset();
 
 	// MT safe
-	bool wait_for_event();
+	bool wait_for_event(bool* const out_got_event);
 
 	// MT safe
 	bool is_cancel_requested() const
@@ -63,27 +62,39 @@ protected:
 
 	int m_timer_fd; // timer fd
 	int m_epoll_fd; // epoll fd
-	fd_pair m_pipe_fd; // cancelation fd, read from 0, write to 1
+	std::array<int, 2> m_pipe_fd; // cancelation fd, read from [0], write to [1]
 
 	std::atomic<int> m_pending_event_count;
 	std::atomic<bool> m_pending_cancel;
-	
-	std::mutex              m_mutex;
-	std::condition_variable m_cond_var;
+
+	bool give_pipe();
+	// bool take_pipe();
+	// bool is_pipe_empty(bool* const out_is_empty);
+
+	bool read_counter(uint64_t* const ctr);
 
 	bool has_event() const
 	{
 		return (m_pending_event_count > 0) || is_cancel_requested();
 	}
 
-	// in the event of cancelation, m_pending_event_count may be 0
+	// m_pending_event_count may be 0 if canceled, or if in early event check
+	// wait_for_event may also wake spuriously if more threads wait than events were recevied, and some threads will fall through with out_event == false
 	// check if it was 0 or less, and undo the subtraction if it was
-	void dec_event_ctr() const
+	// returns true if an event was consumed
+	bool dec_event_ctr_clamp()
 	{
 		const int prev = m_pending_event_count.fetch_sub(1);
 		if(prev <= 0)
 		{
 			m_pending_event_count++;
 		}
+
+		return prev > 0;
+	}
+
+	void dec_event_ctr()
+	{
+		m_pending_event_count--;
 	}
 };

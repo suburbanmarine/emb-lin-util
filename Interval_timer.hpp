@@ -34,9 +34,8 @@ public:
 	// NOT MT safe
 	bool start(const std::chrono::nanoseconds& dt);
 
-	// NOT MT safe
-	// Do not call with waiters - call notify_cancel first
-	// And ensure they all have exited
+	// MT safe
+	// stops timer but does not cancel or reset event count
 	bool stop();
 
 	// NOT MT safe

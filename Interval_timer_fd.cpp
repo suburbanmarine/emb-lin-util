@@ -6,16 +6,17 @@
 
 #include "Interval_timer_fd.hpp"
 
-#include <functional>
+#include <sys/epoll.h>
+#include <sys/timerfd.h>
 
+#include <cerrno>
 #include <cstring>
 
 Interval_timer_fd::Interval_timer_fd() : m_pending_event_count(0), m_pending_cancel(false)
 {
-	m_timer_fd      = -1;
-	m_epoll_fd      = -1;
-	m_pipe_fd.fd[0] = -1;
-	m_pipe_fd.fd[1] = -1;
+	m_timer_fd = -1;
+	m_epoll_fd = -1;
+	m_pipe_fd.fill(-1);
 }
 Interval_timer_fd::~Interval_timer_fd()
 {
@@ -26,21 +27,21 @@ bool Interval_timer_fd::init()
 {
 	reset();
 
-	m_timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
+	m_timer_fd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | O_NONBLOCK);
 	if(m_timer_fd < 0)
 	{
 		reset();
 		return false;
 	}
 
-	m_epoll_fd = epoll_create(2);
+	m_epoll_fd = epoll_create1(EPOLL_CLOEXEC);
 	if(m_epoll_fd < 0)
 	{
 		reset();
 		return false;
 	}
 
-	int ret = pipe(m_pipe_fd);
+	int ret = pipe2(m_pipe_fd.data(), O_CLOEXEC | O_NONBLOCK);
 	if(ret != 0)
 	{
 		reset();
@@ -53,7 +54,7 @@ bool Interval_timer_fd::init()
 
 		ev.events  = EPOLLIN;
 		ev.data.fd = m_timer_fd;
-		ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_timer_fd, ev);
+		ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_timer_fd, &ev);
 		if(ret != 0)
 		{
 			reset();
@@ -63,7 +64,7 @@ bool Interval_timer_fd::init()
 		memset(&ev, 0, sizeof(ev));
 		ev.events  = EPOLLIN;
 		ev.data.fd = m_timer_fd;
-		ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_pipe_fd.fds[0], ev);
+		ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_pipe_fd[0], &ev);
 		if(ret != 0)
 		{
 			reset();
@@ -125,81 +126,186 @@ void Interval_timer_fd::reset()
 		m_epoll_fd = -1;
 	}
 
-	if(m_pipe_fd.fd[0] >= 0)
+	if(m_pipe_fd[0] >= 0)
 	{
-		int ret = close(m_pipe_fd.fd[0]);
-		m_pipe_fd.fd[0] = -1;
+		int ret = close(m_pipe_fd[0]);
+		m_pipe_fd[0] = -1;
 	}
 
-	if(m_pipe_fd.fd[1] >= 0)
+	if(m_pipe_fd[1] >= 0)
 	{
-		int ret = close(m_pipe_fd.fd[1]);
-		m_pipe_fd.fd[1] = -1;
+		int ret = close(m_pipe_fd[1]);
+		m_pipe_fd[1] = -1;
 	}
 
 	m_pending_event_count = 0;
 	m_pending_cancel      = false;
 }
 
-bool Interval_timer_fd::wait_for_event()
+bool Interval_timer_fd::wait_for_event(bool* const out_got_event)
 {
+	bool got_error  = false;
+	bool got_event  = false;
+
 	// check early for cached events to avoid more syscalls
 	if(has_event())
 	{
-		dec_event_ctr();
-		return true;
-	}
-
-	std::array<epoll_event, 2> evs;
-	memset(&ev[0], 0, sizeof(ev));
-	memset(&ev[1], 0, sizeof(ev));
-
-	int ret = epoll_wait(m_epoll_fd, evs.data(), evs.size(), -1);
-	if(ret > 0)
-	{
-		for(int i = 0; i < ret; i++)
-		{
-			if(evs[i].data.fd == m_timer_fd)
-			{
-				//if m_timer_fd, read a uint64_t to get number of missed events and increment
-				uint64_t buf = 0;
-				int ret = read(m_timer_fd, &buf, sizeof(buf));
-				if(ret != sizeof(buf))
-				{
-					return false;
-				}
-
-				m_pending_event_count += buf;
-			}
-			else if(evs[i].data.fd == m_pipe_fd.fds[0])
-			{
-				//if m_pipe_fd.fds[0], cancel is requested
-				continue;
-			}
-			else
-			{
-				//Log Error
-				continue;
-			}
-		}
+		got_event = dec_event_ctr_clamp();
 	}
 	else
 	{
-		//Log Error
+		std::array<epoll_event, 2> evs;
+		memset(evs.data(), 0, evs.size() * sizeof(epoll_event));
+
+		int ret = 0;
+		errno   = 0;
+		do
+		{
+			ret = epoll_wait(m_epoll_fd, evs.data(), evs.size(), -1);
+		} while( (ret == -1) && (errno == EINTR) );
+
+		if(ret > 0)
+		{
+			for(int i = 0; i < ret; i++)
+			{
+				if(evs[i].data.fd == m_timer_fd)
+				{
+					// if m_timer_fd, read a uint64_t to get number of missed events and increment
+					// we hope that buf == 1, but hey, sometimes things are slow
+
+					// ask kernel for event count
+					uint64_t buf = 0;
+					if( ! read_counter(&buf) )
+					{
+						got_error = true;
+					}
+
+					// record the number of events
+					m_pending_event_count += buf;
+
+					// m_pending_event_count may be non zero, try to decrement it
+					// in the event of a race condition we may not actually get an event but will wake
+					// it is possible another thread steals our increment and actually does the work, leaving us with a 0 counter
+					// eg, epoll may broadcast a wake to many threads, and we each may read the counter but may not all need to do work in the event that numthreads > numevents
+					// in any case, the application will check if got_event == false, and do nothing in this thread context if so
+					// there is probably some room to optimize here, this is the "thundering herd" problem
+					// We do not worry about it now as this will mostly be used for single worker thread calling wait.
+					got_event = dec_event_ctr_clamp();
+				}
+				else if(evs[i].data.fd == m_pipe_fd[0])
+				{
+					//if m_pipe_fd[0], cancel is requested
+
+					// we do not read the pipe, since we want cancel request to latch and prevent waiting
+
+					// we do not check for pending timer events, since epoll_wait will notify us and we handle it in the previous if stmt
+
+					// users should check if it has been canceled before sleeping
+				}
+				else
+				{
+					//Log Error, unexpected fd
+				}
+			}
+		}
+		else
+		{
+			got_error = true;
+		}
 	}
 
+	if(out_got_event)
+	{
+		*out_got_event = got_event;
+	}
 
-	dec_event_ctr();
+	return ! got_error;
+}
+
+bool Interval_timer_fd::notify_cancel()
+{
+	const bool prev_pending_cancel = m_pending_cancel.exchange(true);
+
+	// only give the pipe if we are the first to cancel
+	// we do not want pipe to have more than 1 byte, eg we want a binary semaphore
+	if( ! prev_pending_cancel )
+	{
+		return give_pipe();
+	}
+
+	// otherwise we do not need to give the pipe
+	return true;
+}
+
+bool Interval_timer_fd::give_pipe()
+{
+	uint8_t buf = 0;
+
+	int ret = 0;
+	errno   = 0;
+
+	do
+	{
+		ret = write(m_pipe_fd[1], &buf, sizeof(buf));
+	} while((ret == -1) && (errno == EINTR) );
+	
+	if(ret != 1)
+	{
+		return false;
+	}
+
+	return true;
+}
+#if 0
+bool Interval_timer_fd::take_pipe()
+{
+	uint8_t buf = 0;
+
+	int ret = 0;
+	errno   = 0;
+
+	do
+	{
+		ret = read(m_pipe_fd[0], &buf, sizeof(buf));
+	} while((ret == -1) && (errno == EINTR) );
+	
+	if(ret != 1)
+	{
+		return false;
+	}
 
 	return true;
 }
 
-bool notify_cancel()
+bool Interval_timer_fd::is_pipe_empty(bool* const out_is_empty)
 {
-	m_pending_cancel = true;
-	uint8_t buf = 0;
-	int ret = write(m_pipe_fd.fds[1], &buf, sizeof(buf));
-	if(ret != sizeof(buf))
+	int read_availible = 0;
+	int ret = ioctl(m_pipe_fd[0], &FIONREAD, &read_availible);
+	if(ret != 0)
+	{
+		return false;
+	}
+
+	if(out_is_empty)
+	{
+		*out_is_empty = read_availible > 0;
+	}
+
+	return true;
+}
+#endif
+
+bool Interval_timer_fd::read_counter(uint64_t* const ctr)
+{
+	int ret = 0;
+	errno   = 0;
+
+	do
+	{
+		ret = read(m_timer_fd, ctr, sizeof(uint64_t));
+	} while((ret == -1) && (errno == EINTR) );
+
+	if(ret != sizeof(uint64_t))
 	{
 		return false;
 	}

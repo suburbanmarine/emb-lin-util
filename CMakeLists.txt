@@ -1,6 +1,7 @@
 add_library(emb-lin-util
 	Chronometer.cpp
 	Interval_timer.cpp
+	Interval_timer_fd.cpp
 	Stopwatch.cpp
 	Thread_base.cpp
 	Timespec_util.cpp
