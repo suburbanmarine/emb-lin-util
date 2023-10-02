@@ -16,7 +16,10 @@ bool Chronometer::get_time(std::chrono::nanoseconds* const out_time)
 		return false;
 	}
 
-	*out_time = Timespec_util::to_chrono<std::chrono::nanoseconds>(t0);
+	if(out_time)
+	{
+		*out_time = Timespec_util::to_chrono<std::chrono::nanoseconds>(t0);
+	}
 
 	return true;
 }
