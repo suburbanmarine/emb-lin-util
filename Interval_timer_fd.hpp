@@ -71,6 +71,8 @@ protected:
 	// bool take_pipe();
 	// bool is_pipe_empty(bool* const out_is_empty);
 
+	// out_got_error is true
+	// return true - ctr is valid
 	bool read_counter(uint64_t* const ctr);
 
 	bool has_event() const

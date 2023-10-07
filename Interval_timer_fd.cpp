@@ -208,8 +208,13 @@ bool Interval_timer_fd::wait_for_event(bool* const out_got_event)
 				}
 			}
 		}
+		else if(ret == 0)
+		{
+			// spurious wake?
+		}
 		else
 		{
+			// error
 			got_error = true;
 		}
 	}
@@ -300,15 +305,43 @@ bool Interval_timer_fd::read_counter(uint64_t* const ctr)
 	ssize_t ret = 0;
 	errno   = 0;
 
+	bool fret = false;
+
+	*ctr = 0;
+
 	do
 	{
 		ret = read(m_timer_fd, ctr, sizeof(uint64_t));
 	} while((ret == -1) && (errno == EINTR) );
 
-	if(ret != sizeof(uint64_t))
+	if( ret < 0 )
 	{
-		return false;
+		if(errno == EAGAIN)
+		{
+			// no ticks & O_NONBLOCK is set, not really an error
+			fret = true;
+		}
+		else
+		{
+			// other error
+			fret = false;
+		}
+	}
+	else if(ret != sizeof(uint64_t))
+	{
+		//something is very broken
+		fret = false;
+	}
+	else if(ret == sizeof(uint64_t))
+	{
+		// ctr was updated by read
+		fret = true;
+	}
+	else
+	{
+		//something is very broken
+		fret = false;	
 	}
 
-	return true;
+	return fret;
 }
