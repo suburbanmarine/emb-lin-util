@@ -48,7 +48,10 @@ bool Interval_timer::start(const std::chrono::nanoseconds& dt)
 		return false;
 	}
 
-	reset();
+	{
+		m_pending_event_count = 0;
+		m_pending_cancel      = false;
+	}
 
 	itimerspec new_val;
 	memset(&new_val, 0, sizeof(new_val));
@@ -97,16 +100,18 @@ bool Interval_timer::wait_for_event()
 {
 	{
 		std::unique_lock<std::mutex> lock(m_mutex);
-		m_cond_var.wait(lock, std::bind(&Interval_timer::has_event, this));
+		m_cond_var.wait(lock, std::bind(&Interval_timer::should_wake, this));
 	}
 
 	// in the event of cancelation, m_pending_event_count may be 0
 	// check if it was 0 or less, and undo the subtraction if it was
+	bool consumed_event = true;
 	const int prev = m_pending_event_count.fetch_sub(1);
 	if(prev <= 0)
 	{
+		consumed_event = false;
 		m_pending_event_count++;
 	}
 
-	return true;
+	return consumed_event;
 }

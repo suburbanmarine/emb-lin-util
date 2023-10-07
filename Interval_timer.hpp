@@ -44,6 +44,8 @@ public:
 	void reset();
 
 	// MT safe
+	// true  - has event
+	// false - no event
 	bool wait_for_event();
 
 	// MT safe
@@ -73,9 +75,14 @@ protected:
 	std::mutex              m_mutex;
 	std::condition_variable m_cond_var;
 
-	bool has_event() const
+	bool should_wake() const
 	{
 		return (m_pending_event_count > 0) || is_cancel_requested();
+	}
+
+	bool has_event() const
+	{
+		return m_pending_event_count > 0;
 	}
 
 	static void dispatch_event(sigval sig)
