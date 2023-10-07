@@ -27,3 +27,5 @@ INSTALL(
 	DESTINATION
 		lib
 )
+
+add_subdirectory(tests)
