@@ -50,8 +50,8 @@ bool Interval_timer_fd::init()
 
 	{
 		epoll_event ev;
-		memset(&ev, 0, sizeof(ev));
 
+		memset(&ev, 0, sizeof(ev));
 		ev.events  = EPOLLIN;
 		ev.data.fd = m_timer_fd;
 		ret = epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_timer_fd, &ev);
@@ -241,7 +241,7 @@ bool Interval_timer_fd::give_pipe()
 {
 	uint8_t buf = 0;
 
-	int ret = 0;
+	ssize_t ret = 0;
 	errno   = 0;
 
 	do
@@ -261,7 +261,7 @@ bool Interval_timer_fd::take_pipe()
 {
 	uint8_t buf = 0;
 
-	int ret = 0;
+	ssize_t ret = 0;
 	errno   = 0;
 
 	do
@@ -297,7 +297,7 @@ bool Interval_timer_fd::is_pipe_empty(bool* const out_is_empty)
 
 bool Interval_timer_fd::read_counter(uint64_t* const ctr)
 {
-	int ret = 0;
+	ssize_t ret = 0;
 	errno   = 0;
 
 	do
