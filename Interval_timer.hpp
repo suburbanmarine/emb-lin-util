@@ -55,6 +55,12 @@ public:
 	}
 
 	// MT safe
+	int pending_event_count() const
+	{
+		return m_pending_event_count;
+	}
+
+	// MT safe
 	// This can be used to force wake all waiters with a cancel msg
 	// After this is called, all waiters should wake and not-rewait
 	// This cancelation is latching
