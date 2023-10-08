@@ -247,8 +247,8 @@ TEST(Interval_timer, multiple_async_waiters_fast_backlog)
 		val->join();
 	}
 
-	size_t total_event_cnt = 0;
-	size_t total_loop_cnt = 0;
+	int total_event_cnt = 0;
+	int total_loop_cnt = 0;
 	for(auto& val : m_async_waiters)
 	{
 		total_event_cnt      += val->get_event_count();
