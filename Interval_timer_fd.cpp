@@ -148,6 +148,7 @@ bool Interval_timer_fd::wait_for_event(bool* const out_got_event)
 	bool got_event  = false;
 
 	// check early for cached events to avoid more syscalls
+	// m_pending_event_count will not be updated, any pending ticks will remain kernel side until has_event is false
 	if(has_event())
 	{
 		got_event = dec_event_ctr_clamp();
@@ -181,16 +182,22 @@ bool Interval_timer_fd::wait_for_event(bool* const out_got_event)
 					}
 
 					// record the number of events
-					m_pending_event_count += buf;
-
-					// m_pending_event_count may be non zero, try to decrement it
-					// in the event of a race condition we may not actually get an event but will wake
-					// it is possible another thread steals our increment and actually does the work, leaving us with a 0 counter
-					// eg, epoll may broadcast a wake to many threads, and we each may read the counter but may not all need to do work in the event that numthreads > numevents
-					// in any case, the application will check if got_event == false, and do nothing in this thread context if so
-					// there is probably some room to optimize here, this is the "thundering herd" problem
-					// We do not worry about it now as this will mostly be used for single worker thread calling wait.
-					got_event = dec_event_ctr_clamp();
+					if(buf > 0)
+					{
+						buf--;
+						m_pending_event_count.fetch_add(buf);
+						got_event = true;
+					}
+					else
+					{
+						// m_pending_event_count may be non zero, try to decrement it
+						// in the event of a race condition we may not actually get an event but will wake
+						// in any case, the application will check if got_event == false, and do nothing in this thread context if so
+						// there is probably some room to optimize here, this is the "thundering herd" problem
+						// We do not worry about it now as this will mostly be used for single worker thread calling wait.
+						// generally a single thread will read the timer backlog count, post it, and the other threads will decrement it here
+						got_event = dec_event_ctr_clamp();
+					}
 				}
 				else if(evs[i].data.fd == m_pipe_fd[0])
 				{
