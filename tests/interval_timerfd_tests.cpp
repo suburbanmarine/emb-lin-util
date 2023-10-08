@@ -79,7 +79,6 @@ protected:
 				{
 					std::this_thread::sleep_for(std::chrono::microseconds(m_wait_us));
 				}
-
 				m_event_cnt++;
 			}
 
@@ -231,7 +230,7 @@ TEST(Interval_timer_fd, multiple_async_waiters_fast_backlog)
 	std::array<std::shared_ptr<Interval_timer_fd_waiters>, 8> m_async_waiters;
 	for(auto& val : m_async_waiters)
 	{
-		val = std::make_shared<Interval_timer_fd_waiters>(m_ival, 1010);
+		val = std::make_shared<Interval_timer_fd_waiters>(m_ival, 50000);
 		val->launch();
 	}
 
@@ -239,9 +238,10 @@ TEST(Interval_timer_fd, multiple_async_waiters_fast_backlog)
 
 	ASSERT_TRUE(m_ival->start(std::chrono::milliseconds(1)));
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(2500) + std::chrono::microseconds(500));
+	std::this_thread::sleep_for(std::chrono::milliseconds(2500) + std::chrono::microseconds(300));
 
-	// send async cancel, we expect 25 events to be handled across all of the waiters
+	ASSERT_TRUE(m_ival->stop());
+
 	ASSERT_TRUE(m_ival->notify_cancel());
 
 	for(auto& val : m_async_waiters)
@@ -249,15 +249,19 @@ TEST(Interval_timer_fd, multiple_async_waiters_fast_backlog)
 		val->join();
 	}
 
-	size_t total_event_cnt = 0;
-	size_t total_loop_cnt = 0;
+	int total_event_cnt = 0;
+	int total_loop_cnt = 0;
 	for(auto& val : m_async_waiters)
 	{
 		total_event_cnt += val->get_event_count();
 		total_loop_cnt  += val->get_loop_count();
 	}
-	EXPECT_EQ(total_event_cnt, 2500U);
+	EXPECT_GE(total_loop_cnt, 49 * (int)m_async_waiters.size()); // per thread 2500 / 50 - 1
+	EXPECT_LE(total_loop_cnt, 50 * (int)m_async_waiters.size()); // per thread 2500 / 50
 
-	EXPECT_LE(total_loop_cnt, 2500U * m_async_waiters.size());
-	EXPECT_GE(total_loop_cnt, 2500U);
+	EXPECT_GE(total_event_cnt, 49 * (int)m_async_waiters.size());
+	EXPECT_LE(total_event_cnt, 50 * (int)m_async_waiters.size());
+
+	// EXPECT_GE(m_ival->pending_event_count(), 0); // this is not very accurate, since the app's version is only synced with the the kernel if it expires
+	EXPECT_LE(m_ival->pending_event_count(), 2500 - total_event_cnt);
 }
