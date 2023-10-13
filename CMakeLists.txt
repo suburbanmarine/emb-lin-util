@@ -5,6 +5,8 @@ add_library(emb-lin-util
 	Stopwatch.cpp
 	Thread_base.cpp
 	Timespec_util.cpp
+
+	emb-lin-util.cpp
 )
 
 target_link_libraries(emb-lin-util
