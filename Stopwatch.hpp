@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
 
 class Stopwatch
@@ -14,22 +15,21 @@ public:
 	Stopwatch();
 	~Stopwatch();
 
+	// MT safe
 	bool start();
-	// bool stop();
+	// MT safe
 	bool reset();
 
-	// Get time since t0
+	// MT safe
 	bool get_time(std::chrono::nanoseconds* const dt) const;
-
-	// Set alarm time as offset from t0
-	void set_alarm(const std::chrono::nanoseconds& dt);
-
-	bool is_expired(bool* const is_exp);
+	// MT safe
+	bool is_expired(const std::chrono::nanoseconds& alarm_dt, bool* const is_exp);
 
 protected:
 
+	static_assert(std::is_trivially_copyable_v<std::chrono::nanoseconds>);
+	static_assert(std::atomic<std::chrono::nanoseconds>::is_always_lock_free);
+
 	// ABS time of start
-	std::chrono::nanoseconds t0;
-	// ABS time of alarm
-	std::chrono::nanoseconds t1;
+	std::atomic<std::chrono::nanoseconds> m_t0;
 };

@@ -8,10 +8,9 @@
 
 #include "Chronometer.hpp"
 
-Stopwatch::Stopwatch()
+Stopwatch::Stopwatch() : m_t0(std::chrono::nanoseconds::zero())
 {
-	t0 = std::chrono::nanoseconds::zero();
-	t1 = std::chrono::nanoseconds::zero();
+	
 }
 
 Stopwatch::~Stopwatch()
@@ -21,7 +20,15 @@ Stopwatch::~Stopwatch()
 
 bool Stopwatch::start()
 {
-	return Chronometer::get_time(&t0);
+	std::chrono::nanoseconds t_i;
+	if( ! Chronometer::get_time(&t_i) )
+	{
+		return false;
+	}
+
+	m_t0 = t_i;
+
+	return true;
 }
 
 bool Stopwatch::reset()
@@ -39,28 +46,23 @@ bool Stopwatch::get_time(std::chrono::nanoseconds* const dt) const
 
 	if(dt)
 	{
-		*dt = t_i - t0;
+		*dt = t_i - m_t0.load();
 	}
 
 	return true;
 }
 
-void Stopwatch::set_alarm(const std::chrono::nanoseconds& dt)
+bool Stopwatch::is_expired(const std::chrono::nanoseconds& alarm_dt, bool* const is_exp)
 {
-	t1 = dt + t0;
-}
-
-bool Stopwatch::is_expired(bool* const is_exp)
-{
-	std::chrono::nanoseconds t_i;
-	if( ! Chronometer::get_time(&t_i) )
+	std::chrono::nanoseconds dt;
+	if( ! get_time(&dt) )
 	{
 		return false;
 	}
 
 	if(is_exp)
 	{
-		*is_exp = (t1 <= t_i);
+		*is_exp = (alarm_dt >= dt);
 	}
 
 	return true;
