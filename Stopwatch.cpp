@@ -46,7 +46,7 @@ bool Stopwatch::get_time(std::chrono::nanoseconds* const dt) const
 
 	if(dt)
 	{
-		*dt = t_i - m_t0.load();
+		*dt = (t_i - m_t0.load());
 	}
 
 	return true;
@@ -62,7 +62,7 @@ bool Stopwatch::is_expired(const std::chrono::nanoseconds& alarm_dt, bool* const
 
 	if(is_exp)
 	{
-		*is_exp = (alarm_dt >= dt);
+		*is_exp = (dt >= alarm_dt);
 	}
 
 	return true;
