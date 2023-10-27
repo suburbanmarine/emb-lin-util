@@ -4,9 +4,9 @@
  * @license Licensed under the 3-Clause BSD LICENSE. See LICENSE.txt for details.
 */
 
-#include "Stopwatch.hpp"
+#include "emb-lin-util/Stopwatch.hpp"
 
-#include "Chronometer.hpp"
+#include "emb-lin-util/Chronometer.hpp"
 
 Stopwatch::Stopwatch() : m_t0(std::chrono::nanoseconds::zero())
 {

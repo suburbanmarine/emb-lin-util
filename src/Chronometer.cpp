@@ -4,9 +4,9 @@
  * @license Licensed under the 3-Clause BSD LICENSE. See LICENSE.txt for details.
 */
 
-#include "Chronometer.hpp"
+#include "emb-lin-util/Chronometer.hpp"
 
-#include "Timespec_util.hpp"
+#include "emb-lin-util/Timespec_util.hpp"
 
 bool Chronometer::get_time(std::chrono::nanoseconds* const out_time)
 {

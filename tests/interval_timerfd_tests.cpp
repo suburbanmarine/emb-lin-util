@@ -1,8 +1,8 @@
-#include "Interval_timer_fd.hpp"
-#include "Stopwatch.hpp"
-#include "Thread_base.hpp"
+#include <emb-lin-util/Interval_timer_fd.hpp>
+#include <emb-lin-util/Stopwatch.hpp>
+#include <emb-lin-util/Thread_base.hpp>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <thread>
 

@@ -1,13 +1,14 @@
 add_library(emb-lin-util
-	Chronometer.cpp
-	Interval_timer.cpp
-	Interval_timer_fd.cpp
-	Stopwatch.cpp
-	Thread_base.cpp
-	Timespec_util.cpp
-	Signal_handler.cpp
+	src/Chronometer.cpp
+	src/Interval_timer.cpp
+	src/Interval_timer_fd.cpp
+	src/Stopwatch.cpp
+	src/Thread_base.cpp
+	src/Timespec_util.cpp
+	src/Signal_handler.cpp
+	src/File_util.cpp
 
-	emb-lin-util.cpp
+	src/emb-lin-util.cpp
 )
 
 target_link_libraries(emb-lin-util
@@ -21,7 +22,7 @@ target_link_libraries(emb-lin-util
 
 target_include_directories(emb-lin-util
 PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 INSTALL(
