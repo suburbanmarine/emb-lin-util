@@ -8,6 +8,7 @@
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 class File_util
 {
@@ -29,7 +30,7 @@ public:
 	}
 
 	//read up to max_to_read B from a file
-	// static bool readSmallFile(const std::string_view &filename, const size_t max_to_read, std::string* const out_value);
+	static bool readSmallFile(const std::string& filename, const ssize_t max_to_read, std::vector<uint8_t>* const out_value);
 
 	static std::string getenv_or_empty(char const * const env_name);
 	static std::string getenv_or_str(char const * const env_name, const std::string_view& def_str);

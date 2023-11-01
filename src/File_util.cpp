@@ -10,6 +10,9 @@
 
 #include <spdlog/spdlog.h>
 
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include <cstdlib>
 #include <fstream>
 
@@ -59,6 +62,52 @@ bool File_util::readSmallFileToInt(char const * const filename, int* const out_v
 		return false;
 	}
 
+	return true;
+}
+
+bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_read, std::vector<uint8_t>* const out_value)
+{
+	if(max_to_read < 0)
+	{
+		return false;
+	}
+
+	int fd = ::open(filename.c_str(), O_RDONLY | O_CLOEXEC);
+	if(fd < 0)
+	{
+		return false;
+	}
+
+	const off_t file_len = lseek(fd, 0, SEEK_END);
+	if(file_len < 0)
+	{
+		::close(fd);
+		return false;
+	}
+
+	if(lseek(fd, 0, SEEK_SET) < 0)
+	{
+		::close(fd);
+		return false;
+	}
+
+	const ssize_t num_to_read = std::min(max_to_read, file_len);
+	out_value->resize(num_to_read);
+
+	ssize_t num_read = 0;
+	do
+	{
+		ssize_t ret = read(fd, out_value->data() + num_read, num_to_read - num_read);
+		if(ret < 0)
+		{
+			::close(fd);
+			return false;
+		}
+
+		num_read += ret;
+	} while(num_read < num_to_read);
+	
+	::close(fd);
 	return true;
 }
 
