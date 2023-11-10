@@ -6,9 +6,12 @@
 
 #pragma once
 
-#include <atomic>
+#include "emb-lin-util/Timespec_util.hpp"
 
 #include <signal.h>
+
+#include <atomic>
+
 
 class Signal_handler
 {
@@ -26,6 +29,12 @@ public:
 	bool mask_handled_signals();
 
 	//wait for signal
+	template <typename Rep, typename Period >
+	bool wait_for_signal(sigset_t* const set, const std::chrono::duration<Rep, Period>& timeout)
+	{
+		return wait_for_signal(set, Timespec_util::from_chrono(timeout));
+	}
+
 	bool wait_for_signal(sigset_t* const set, const timespec& timeout);
 
 	bool xch_sighup()
