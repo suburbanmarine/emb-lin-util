@@ -8,6 +8,7 @@
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
+#include <fmt/std.h>
 
 void Thread_base::launch()
 {
