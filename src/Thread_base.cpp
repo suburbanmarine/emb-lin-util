@@ -9,8 +9,10 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
+#include <fmt/core.h>
+
 #ifdef FMT_VERSION
-  #if FMT_VERSION < 70000
+  #if FMT_VERSION < 90000
     #include <fmt/ostream.h>
   #else
     #include <fmt/std.h>
