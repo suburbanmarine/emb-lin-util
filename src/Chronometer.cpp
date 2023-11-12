@@ -28,3 +28,19 @@ bool Chronometer::get_time(timespec*                 const out_time)
 	int ret = clock_gettime(CLOCK_MONOTONIC, out_time);
 	return ret == 0;
 }
+
+bool Chronometer::get_real_time(timespec*                 const out_time)
+{
+	int ret = clock_gettime(CLOCK_REALTIME, out_time);
+	return ret == 0;
+}
+bool Chronometer::get_tai_time(timespec*                 const out_time)
+{
+	int ret = clock_gettime(CLOCK_TAI, out_time);
+	return ret == 0;
+}
+bool Chronometer::get_mono_time(timespec*                 const out_time)
+{
+	int ret = clock_gettime(CLOCK_MONOTONIC, out_time);
+	return ret == 0;
+}

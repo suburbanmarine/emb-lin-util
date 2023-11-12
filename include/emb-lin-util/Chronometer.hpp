@@ -16,4 +16,8 @@ public:
 	static bool get_time(std::chrono::nanoseconds* const out_time);
 	static bool get_time(timespec*                 const out_time);
 	
+
+	static bool get_real_time(timespec*             const out_time);
+	static bool get_tai_time(timespec*              const out_time);
+	static bool get_mono_time(timespec*             const out_time);
 };
