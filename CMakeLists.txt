@@ -1,12 +1,13 @@
 add_library(emb-lin-util
 	src/Chronometer.cpp
+	src/File_util.cpp
 	src/Interval_timer.cpp
 	src/Interval_timer_fd.cpp
+	src/Signal_handler.cpp
 	src/Stopwatch.cpp
 	src/Thread_base.cpp
 	src/Timespec_util.cpp
-	src/Signal_handler.cpp
-	src/File_util.cpp
+	src/Zlib_util.cpp
 
 	src/emb-lin-util.cpp
 )
@@ -18,6 +19,8 @@ target_link_libraries(emb-lin-util
 	Boost::boost
 
 	spdlog::spdlog
+
+	ZLIB::ZLIB
 )
 
 target_include_directories(emb-lin-util
