@@ -91,7 +91,7 @@ bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_
 		return false;
 	}
 
-	const ssize_t num_to_read = std::min(max_to_read, file_len);
+	const ssize_t num_to_read = std::min<ssize_t>(max_to_read, file_len);
 	out_value->resize(num_to_read);
 
 	ssize_t num_read = 0;
