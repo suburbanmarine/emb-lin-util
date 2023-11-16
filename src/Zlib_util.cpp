@@ -65,7 +65,8 @@ bool Zlib_util::deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8
 	}
 
 	//trim to size of deflated data
-	out_deflate_data->resize(stream->avail_out);
+	const size_t num_to_consume = out_deflate_data.size() - stream->avail_out;
+	out_deflate_data->resize(num_to_consume);
 
 	// ret = ::deflateEnd(&stream);
 	stream.reset();
