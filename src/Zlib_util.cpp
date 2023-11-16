@@ -135,7 +135,13 @@ bool Zlib_util::deflate(uint8_t* in_data, const size_t in_data_len, const Block_
 	stream->avail_out = deflate_block.size();
 	stream->data_type = Z_BINARY;
 
-	int ret = ::deflateInit2(stream.get(), Z_DEFAULT_COMPRESSION, Z_DEFLATED, 16 + 15, 8, Z_DEFAULT_STRATEGY);
+	int windowBits = 15;
+	if(gzip_mode)
+	{
+		windowBits += 16;
+	}
+
+	int ret = ::deflateInit2(stream.get(), Z_DEFAULT_COMPRESSION, Z_DEFLATED, windowBits, mem_level, Z_DEFAULT_STRATEGY);
 	if(ret != Z_OK)
 	{
 		SPDLOG_WARN("deflateInit2 failed");
