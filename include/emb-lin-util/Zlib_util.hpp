@@ -38,5 +38,5 @@ protected:
 	const size_t deflate_block_size = 64*1024;
 	const size_t inflate_block_size = 64*1024;
 	const bool gzip_mode = false;
-	const int mem_level  = 9;
+	const int mem_level  = 8;
 };
