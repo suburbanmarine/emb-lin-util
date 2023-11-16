@@ -34,7 +34,6 @@ bool Zlib_util::deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8
 
 	std::shared_ptr<z_stream> stream(new z_stream, &::deflateEnd);
 	memset(stream.get(), 0, sizeof(stream));
-
 	stream->zalloc    = Z_NULL;
 	stream->zfree     = Z_NULL;
 	stream->next_in   = in_data.data();
@@ -91,7 +90,7 @@ bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8
 	stream->avail_out = out_inflate_data->size();
 	stream->data_type = Z_BINARY;
 
-	int ret = ::inflateInit2(stream.get(), 0);
+	int ret = ::inflateInit2(stream.get(), 32+15);
 	if(ret != Z_OK)
 	{
 		SPDLOG_WARN("inflateInit2 failed");
