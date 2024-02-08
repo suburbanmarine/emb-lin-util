@@ -25,7 +25,7 @@ bool Zlib_util::init()
 	return true;
 }
 
-bool Zlib_util::deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* out_deflate_data)
+bool Zlib_util::deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* const out_deflate_data)
 {
 	if( ! out_deflate_data )
 	{
@@ -74,50 +74,36 @@ bool Zlib_util::deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8
 	return true;
 }
 
-bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* out_inflate_data)
+bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* const out_inflate_data)
 {
 	if( ! out_inflate_data )
 	{
 		return false;
 	}
 
-	std::shared_ptr<z_stream> stream(new z_stream, &::inflateEnd);
-	memset(stream.get(), 0, sizeof(stream));
-	stream->zalloc    = Z_NULL;
-	stream->zfree     = Z_NULL;
-	stream->next_in   = in_data.data();
-	stream->avail_in  = in_data.size();
-	stream->next_out  = out_inflate_data->data();
-	stream->avail_out = out_inflate_data->size();
-	stream->data_type = Z_BINARY;
-
-	int ret = ::inflateInit2(stream.get(), 0);
-	if(ret != Z_OK)
+	auto inflate_cb = [&out_inflate_data](uint8_t const * const ptr, const size_t len)->bool
 	{
-		SPDLOG_WARN("inflateInit2 failed");
+		out_inflate_data->insert(out_inflate_data->end(), ptr, ptr+len);
+		return true;
+	};
+
+	return inflate(in_data.data(), in_data.size(), inflate_cb);
+}
+
+bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::deque<uint8_t>* const out_inflate_data)
+{
+	if( ! out_inflate_data )
+	{
 		return false;
 	}
 
-	// Z_OK         -- keep going
-	// Z_STREAM_END -- done ok
-	// Z_NEED_DICT  -- fatal
-	// Z_MEM_ERROR  -- fatal oom
-	// Z_BUF_ERROR  -- non fatal, need more space in buf
-	// Z_DATA_ERROR -- stream corrupt
-	ret = ::inflate(stream.get(), Z_FINISH);
-	if(ret != Z_STREAM_END)
+	auto inflate_cb = [&out_inflate_data](uint8_t const * const ptr, const size_t len)->bool
 	{
-		SPDLOG_WARN("inflate failed");
-		return false;
-	}
+		out_inflate_data->insert(out_inflate_data->end(), ptr, ptr+len);
+		return true;
+	};
 
-	//trim to size of inflated data
-	out_inflate_data->resize(stream->avail_out);
-
-	// ret = ::inflateEnd(&stream);
-	stream.reset();
-
-	return true;
+	return inflate(in_data.data(), in_data.size(), inflate_cb);
 }
 
 bool Zlib_util::deflate(uint8_t* in_data, const size_t in_data_len, const Block_callback& cb)

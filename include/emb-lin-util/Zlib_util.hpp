@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <vector>
+#include <deque>
 
 #include <cstdint>
 #include <cstddef>
@@ -17,9 +18,10 @@ public:
 	bool init();
 
 	// out_deflate_data will be resized to fit using deflateBound
-	bool deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* out_deflate_data);
-	// out_inflate_data must be presized, and will be trimmed if too big
-	bool inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* out_inflate_data);
+	bool deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* const out_deflate_data);
+	
+	bool inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* const out_inflate_data);
+	bool inflate_oneshot(std::vector<uint8_t>& in_data, std::deque<uint8_t>* const out_inflate_data);
 
 	// STL container
 	bool deflate(std::vector<uint8_t>& in_data, const Block_callback& cb)
