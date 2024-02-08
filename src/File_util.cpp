@@ -15,6 +15,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <limits>
 
 bool File_util::readSmallFile(char const * const filename, std::string* const out_value)
 {
@@ -65,6 +66,11 @@ bool File_util::readSmallFileToInt(char const * const filename, int* const out_v
 	return true;
 }
 
+bool File_util::readSmallFile(const std::string& filename, std::vector<uint8_t>* const out_value)
+{
+	return readSmallFile(filename, std::numeric_limits<ssize_t>::max(), out_value);
+}
+
 bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_read, std::vector<uint8_t>* const out_value)
 {
 	if(max_to_read < 0)
@@ -107,6 +113,34 @@ bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_
 		num_read += ret;
 	} while(num_read < num_to_read);
 	
+	::close(fd);
+	return true;
+}
+
+bool File_util::writeSmallFile(const std::string& filename, std::vector<uint8_t> const value)
+{
+	if(value.size() > std::numeric_limits<ssize_t>::max())
+	{
+		return false;
+	}
+
+	int fd = ::open(filename.c_str(), O_RDWR | O_CLOEXEC);
+	if(fd < 0)
+	{
+		return false;
+	}
+
+	ssize_t ret = ::write(fd, value.data(), value.size());
+	if(ret < 0) // we could retry, it might have been interrupted by a signal
+	{
+		return false;
+	}
+
+	if(size_t(ret) != value.size()) // we could retry, it might have been interrupted by a signal
+	{
+		return false;
+	}
+
 	::close(fd);
 	return true;
 }
