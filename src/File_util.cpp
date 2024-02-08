@@ -130,15 +130,17 @@ bool File_util::writeSmallFile(const std::string& filename, std::vector<uint8_t>
 		return false;
 	}
 
-	ssize_t ret = ::write(fd, value.data(), value.size());
-	if(ret < 0) // we could retry, it might have been interrupted by a signal
 	{
-		return false;
-	}
+		ssize_t ret = ::write(fd, value.data(), value.size());
+		if(ret < 0) // we could retry, it might have been interrupted by a signal
+		{
+			return false;
+		}
 
-	if(size_t(ret) != value.size()) // we could retry, it might have been interrupted by a signal
-	{
-		return false;
+		if(size_t(ret) != value.size()) // we could retry, it might have been interrupted by a signal
+		{
+			return false;
+		}
 	}
 
 	int ret = ::close(fd);
