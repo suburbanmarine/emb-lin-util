@@ -141,8 +141,8 @@ bool File_util::writeSmallFile(const std::string& filename, std::vector<uint8_t>
 		return false;
 	}
 
-	::close(fd);
-	return true;
+	int ret = ::close(fd);
+	return ret == 0;
 }
 
 std::string File_util::getenv_or_empty(char const * const env_name)
