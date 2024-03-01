@@ -3,6 +3,7 @@ add_library(emb-lin-util
 	src/File_util.cpp
 	src/Interval_timer.cpp
 	src/Interval_timer_fd.cpp
+	src/JSON_CBOR_helper.cpp
 	src/Signal_handler.cpp
 	src/Stopwatch.cpp
 	src/Thread_base.cpp
@@ -17,9 +18,8 @@ target_link_libraries(emb-lin-util
 	rt
 
 	Boost::boost
-
+	nlohmann_json::nlohmann_json
 	spdlog::spdlog
-
 	ZLIB::ZLIB
 )
 
