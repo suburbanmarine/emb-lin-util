@@ -1,6 +1,7 @@
 #pragma once
 
 #include <emb-lin-util/File_util.hpp>
+#include "emb-lin-util/Zlib_util.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -59,21 +60,77 @@ public:
 		from_cbor(v, *dynamic_cast<T*>(this));
 	}
 
-	virtual bool read(const std::string& p)
+	virtual bool read_cbor(const std::string& p, const bool gzip)
 	{
-		std::vector<uint8_t> v;
-
-		if( ! File_util::readSmallFile(p, &v) )
+		std::vector<uint8_t> file_data;
+		if( ! File_util::readSmallFile(p, &file_data) )
 		{
 			return false;
 		}
 
-		from_cbor(v, *dynamic_cast<T*>(this));
+		if(gzip)
+		{
+			std::deque<uint8_t> file_data_dec;
+
+			Zlib_util zlib;
+			if( ! zlib.inflate_oneshot(file_data, &file_data_dec) )
+			{
+				return false;
+			}
+
+			from_cbor(file_data_dec);
+		}
+		else
+		{
+			from_cbor(file_data);
+		}
 
 		return true;
 	}
-	virtual bool write(const std::string& p) const
+	virtual bool write_cbor(const std::string& p, const bool gzip) const
 	{
-		return File_util::writeSmallFile(p, to_cbor(*dynamic_cast<T const * const>(this)));
+		std::vector<uint8_t> file_data = to_cbor();
+
+		bool ret = false;
+
+		if(gzip)
+		{
+			std::vector<uint8_t> file_data_comp;
+
+			Zlib_util zlib;
+			if( ! zlib.deflate_oneshot(file_data, &file_data_comp) )
+			{
+				return false;
+			}
+
+			ret = File_util::writeSmallFile(p, file_data_comp);
+		}
+		else
+		{
+			ret = File_util::writeSmallFile(p, file_data);
+		}
+
+		return ret;
+	}
+
+	virtual bool read_json(const std::string& p)
+	{
+		std::vector<uint8_t> file_data;
+		if( ! File_util::readSmallFile(p, &file_data) )
+		{
+			return false;
+		}
+
+		const nlohmann::json j = nlohmann::json::parse(file_data);
+		from_json(j, *dynamic_cast<T*>(this));
+
+		return true;
+	}
+	virtual bool write_json(const std::string& p) const
+	{
+		nlohmann::json j;
+		to_json(j, *dynamic_cast<T const * const>(this));
+
+		return File_util::writeSmallFile(p, j.dump());
 	}
 };
