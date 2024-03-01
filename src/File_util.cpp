@@ -121,9 +121,9 @@ bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_
 	return true;
 }
 
-bool File_util::writeSmallFile(const std::string& filename, const std::vector<uint8_t>& value)
+bool File_util::writeSmallFile(const std::string& filename, uint8_t const * const ptr, const size_t len)
 {
-	if(value.size() > std::numeric_limits<ssize_t>::max())
+	if(len > std::numeric_limits<ssize_t>::max())
 	{
 		return false;
 	}
@@ -136,14 +136,14 @@ bool File_util::writeSmallFile(const std::string& filename, const std::vector<ui
 	}
 
 	{
-		ssize_t ret = ::write(fd, value.data(), value.size());
+		ssize_t ret = ::write(fd, ptr, len);
 		if(ret < 0) // we could retry, it might have been interrupted by a signal
 		{
 			SPDLOG_WARN("File_util::writeSmallFile error on write - {:s}", "");
 			return false;
 		}
 
-		if(size_t(ret) != value.size()) // we could retry, it might have been interrupted by a signal
+		if(size_t(ret) != len) // we could retry, it might have been interrupted by a signal
 		{
 			SPDLOG_WARN("File_util::writeSmallFile wrote unexpected amount");
 			return false;

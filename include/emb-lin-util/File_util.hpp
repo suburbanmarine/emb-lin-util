@@ -33,7 +33,15 @@ public:
 	static bool readSmallFile(const std::string& filename, std::vector<uint8_t>* const out_value);
 	static bool readSmallFile(const std::string& filename, const ssize_t max_to_read, std::vector<uint8_t>* const out_value);
 
-	static bool writeSmallFile(const std::string& filename, const std::vector<uint8_t>& value);
+	static bool writeSmallFile(const std::string& filename, const std::vector<uint8_t>& value)
+	{
+		return writeSmallFile(filename, value.data(), value.size());
+	}
+	static bool writeSmallFile(const std::string& filename, const std::string& value)
+	{
+		return writeSmallFile(filename, (const uint8_t*)(value.data()), value.size());
+	}
+	static bool writeSmallFile(const std::string& filename, uint8_t const * const ptr, const size_t len);
 
 	static std::string getenv_or_empty(char const * const env_name);
 	static std::string getenv_or_str(char const * const env_name, const std::string_view& def_str);
