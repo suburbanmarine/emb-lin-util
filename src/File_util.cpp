@@ -117,16 +117,17 @@ bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_
 	return true;
 }
 
-bool File_util::writeSmallFile(const std::string& filename, std::vector<uint8_t> const value)
+bool File_util::writeSmallFile(const std::string& filename, const std::vector<uint8_t>& value)
 {
 	if(value.size() > std::numeric_limits<ssize_t>::max())
 	{
 		return false;
 	}
 
-	int fd = ::open(filename.c_str(), O_RDWR | O_CLOEXEC);
+	int fd = ::open(filename.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, (S_IRUSR | S_IWUSR) | (S_IRGRP));
 	if(fd < 0)
 	{
+		SPDLOG_WARN("File_util::writeSmallFile - Could not open {:s}", filename);
 		return false;
 	}
 
@@ -134,16 +135,22 @@ bool File_util::writeSmallFile(const std::string& filename, std::vector<uint8_t>
 		ssize_t ret = ::write(fd, value.data(), value.size());
 		if(ret < 0) // we could retry, it might have been interrupted by a signal
 		{
+			SPDLOG_WARN("File_util::writeSmallFile error on write - {:s}", "");
 			return false;
 		}
 
 		if(size_t(ret) != value.size()) // we could retry, it might have been interrupted by a signal
 		{
+			SPDLOG_WARN("File_util::writeSmallFile wrote unexpected amount");
 			return false;
 		}
 	}
 
 	int ret = ::close(fd);
+	if(ret != 0)
+	{
+		SPDLOG_WARN("File_util::writeSmallFile close failed");
+	}
 	return ret == 0;
 }
 
