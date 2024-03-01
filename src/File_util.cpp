@@ -106,6 +106,8 @@ bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_
 		ssize_t ret = read(fd, out_value->data() + num_read, num_to_read - num_read);
 		if(ret < 0)
 		{
+			out_value->resize(num_read);
+			
 			::close(fd);
 			return false;
 		}
@@ -113,6 +115,8 @@ bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_
 		num_read += ret;
 	} while(num_read < num_to_read);
 	
+	out_value->resize(num_read);
+
 	::close(fd);
 	return true;
 }
