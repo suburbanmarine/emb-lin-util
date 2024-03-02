@@ -133,4 +133,12 @@ public:
 
 		return File_util::writeSmallFile(p, j.dump());
 	}
+
+	virtual bool write_json_pretty(const std::string& p) const
+	{
+		nlohmann::json j;
+		to_json(j, *dynamic_cast<T const * const>(this));
+
+		return File_util::writeSmallFile(p, j.dump(4));
+	}
 };
