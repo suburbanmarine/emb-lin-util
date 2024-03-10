@@ -113,6 +113,22 @@ public:
 		return ret;
 	}
 
+	virtual std::string to_json_string() const
+	{
+		nlohmann::json j;
+		to_json(j, *dynamic_cast<T const * const>(this));
+
+		return j.dump();
+	}
+
+	virtual std::string to_json_string_pretty() const
+	{
+		nlohmann::json j;
+		to_json(j, *dynamic_cast<T const * const>(this));
+
+		return j.dump(4);
+	}
+
 	virtual bool read_json(const std::string& p)
 	{
 		std::vector<uint8_t> file_data;
@@ -128,17 +144,11 @@ public:
 	}
 	virtual bool write_json(const std::string& p) const
 	{
-		nlohmann::json j;
-		to_json(j, *dynamic_cast<T const * const>(this));
-
-		return File_util::writeSmallFile(p, j.dump());
+		return File_util::writeSmallFile(p, to_json_string());
 	}
 
 	virtual bool write_json_pretty(const std::string& p) const
 	{
-		nlohmann::json j;
-		to_json(j, *dynamic_cast<T const * const>(this));
-
-		return File_util::writeSmallFile(p, j.dump(4));
+		return File_util::writeSmallFile(p, to_json_string_pretty());
 	}
 };
