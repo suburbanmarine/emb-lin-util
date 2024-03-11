@@ -4,6 +4,8 @@ project(emb-lin-util
 	LANGUAGES C CXX
 )
 
+configure_file(./src/version.hpp.in version.hpp)
+
 add_library(emb-lin-util
 	src/Chronometer.cpp
 	src/File_util.cpp
@@ -17,6 +19,8 @@ add_library(emb-lin-util
 	src/Zlib_util.cpp
 
 	src/emb-lin-util.cpp
+
+	src/version.cpp
 )
 
 target_link_libraries(emb-lin-util
@@ -30,8 +34,10 @@ target_link_libraries(emb-lin-util
 )
 
 target_include_directories(emb-lin-util
-PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}/include
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+	PRIVATE
+		${CMAKE_CURRENT_BINARY_DIR}
 )
 
 set_target_properties(emb-lin-util
