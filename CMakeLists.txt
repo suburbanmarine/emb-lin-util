@@ -35,7 +35,7 @@ target_link_libraries(emb-lin-util
 
 target_include_directories(emb-lin-util
 	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/include
+		include
 	PRIVATE
 		${CMAKE_CURRENT_BINARY_DIR}
 )
