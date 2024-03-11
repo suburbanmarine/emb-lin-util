@@ -41,6 +41,13 @@ PROPERTIES
 )
 
 INSTALL(
+	DIRECTORY
+		include/
+	DESTINATION
+		include
+)
+
+INSTALL(
 	TARGETS
 		emb-lin-util
 	DESTINATION
