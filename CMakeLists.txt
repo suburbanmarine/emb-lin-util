@@ -1,3 +1,9 @@
+project(emb-lin-util
+	VERSION 0.1.0
+	DESCRIPTION "Misc utility code"
+	LANGUAGES C CXX
+)
+
 add_library(emb-lin-util
 	src/Chronometer.cpp
 	src/File_util.cpp
@@ -26,6 +32,12 @@ target_link_libraries(emb-lin-util
 target_include_directories(emb-lin-util
 PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+set_target_properties(emb-lin-util
+PROPERTIES
+	VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+	SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
 INSTALL(
