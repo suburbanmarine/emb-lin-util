@@ -61,6 +61,8 @@ public:
 	}
 
 	virtual bool read_cbor(const std::string& p, const bool gzip)
+
+	virtual bool read_cbor(const std::string& p, const bool decompress)
 	{
 		std::vector<uint8_t> file_data;
 		if( ! File_util::readSmallFile(p, &file_data) )
@@ -68,7 +70,7 @@ public:
 			return false;
 		}
 
-		if(gzip)
+		if(decompress)
 		{
 			std::deque<uint8_t> file_data_dec;
 
@@ -87,13 +89,13 @@ public:
 
 		return true;
 	}
-	virtual bool write_cbor(const std::string& p, const bool gzip) const
+	virtual bool write_cbor(const std::string& p, const bool compress) const
 	{
 		std::vector<uint8_t> file_data = to_cbor();
 
 		bool ret = false;
 
-		if(gzip)
+		if(compress)
 		{
 			std::vector<uint8_t> file_data_comp;
 
