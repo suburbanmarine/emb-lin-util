@@ -50,6 +50,29 @@ public:
 		return v;
 	}
 
+	virtual bool to_cbor(const bool compress, std::vector<uint8_t>& out_v) const
+	{
+		nlohmann::json j;
+		to_json(j, *dynamic_cast<T const * const>(this));
+
+		nlohmann::json::to_cbor(j, out_v);
+
+		if(compress)
+		{
+			std::vector<uint8_t> data_comp;
+
+			Zlib_util zlib;
+			if( ! zlib.deflate_oneshot(out_v, &data_comp) )
+			{
+				return false;
+			}
+
+			out_v = data_comp;
+		}
+
+		return true;
+	}
+
 	virtual void from_cbor(const std::vector<uint8_t>& v)
 	{
 		from_cbor(v, *dynamic_cast<T*>(this));
@@ -60,7 +83,29 @@ public:
 		from_cbor(v, *dynamic_cast<T*>(this));
 	}
 
-	virtual bool read_cbor(const std::string& p, const bool gzip)
+	virtual bool from_cbor(const bool decompress, std::vector<uint8_t>& v)
+	{
+		if(decompress)
+		{
+			std::deque<uint8_t> data_decomp;
+
+			Zlib_util zlib;
+			if( ! zlib.inflate_oneshot(v, &data_decomp) )
+			{
+				return false;
+			}
+
+			from_cbor(data_decomp, *dynamic_cast<T*>(this));
+		}
+		else
+		{
+			from_cbor(v, *dynamic_cast<T*>(this));
+		}
+
+		return true;
+	}
+
+	virtual bool read_cbor(const std::string& p, const bool decompress)
 	{
 		std::vector<uint8_t> file_data;
 		if( ! File_util::readSmallFile(p, &file_data) )
@@ -68,7 +113,7 @@ public:
 			return false;
 		}
 
-		if(gzip)
+		if(decompress)
 		{
 			std::deque<uint8_t> file_data_dec;
 
@@ -87,13 +132,13 @@ public:
 
 		return true;
 	}
-	virtual bool write_cbor(const std::string& p, const bool gzip) const
+	virtual bool write_cbor(const std::string& p, const bool compress) const
 	{
 		std::vector<uint8_t> file_data = to_cbor();
 
 		bool ret = false;
 
-		if(gzip)
+		if(compress)
 		{
 			std::vector<uint8_t> file_data_comp;
 
