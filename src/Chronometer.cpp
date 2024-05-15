@@ -43,10 +43,10 @@ bool Chronometer::get_tai_time(timespec*                 const out_time)
 	{
 		// correct for epoch
 		// Linux returns CLOCK_TAI relative to 1970-01-01 00:00:00, we want it relative to 1958-01-01 00:00:00
-		const date::sys_days unix_epoch    = date::year_month_day(date::year(1970), date::January, date::day(1));
-		const date::sys_days tai_epoch     = date::year_month_day(date::year(1958), date::January, date::day(1));
-		const std::chrono::days delta_days = unix_epoch - tai_epoch;
-		const std::chrono::seconds delta_s = delta_days;
+		constexpr date::sys_days unix_epoch    = date::year_month_day(date::year(1970), date::January, date::day(1));
+		constexpr date::sys_days tai_epoch     = date::year_month_day(date::year(1958), date::January, date::day(1));
+		constexpr std::chrono::days delta_days = unix_epoch - tai_epoch;
+		constexpr std::chrono::seconds delta_s = delta_days;
 
 		out_time->tv_sec += delta_s.count();
 	}
