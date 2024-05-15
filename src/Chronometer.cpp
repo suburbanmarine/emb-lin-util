@@ -46,7 +46,7 @@ bool Chronometer::get_tai_time(timespec*                 const out_time)
 		constexpr date::sys_days unix_epoch    = date::year_month_day(date::year(1970), date::January, date::day(1));
 		constexpr date::sys_days tai_epoch     = date::year_month_day(date::year(1958), date::January, date::day(1));
 		constexpr std::chrono::days delta_days = unix_epoch - tai_epoch;
-		constexpr std::chrono::seconds delta_s = delta_days;
+		constexpr std::chrono::seconds delta_s = delta_days; // TODO: is there an additional 10 second offset?
 
 		out_time->tv_sec += delta_s.count();
 	}
