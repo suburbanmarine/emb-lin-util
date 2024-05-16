@@ -62,17 +62,17 @@ public:
 	static T to_chrono(const timespec& dt)
 	{
 		std::chrono::seconds     t_sec(dt.tv_sec);
-		std::chrono::nanoseconds t_nsec(dt.tv_nsec);
+		std::chrono::nanoseconds t_nsec(dt.tv_nsec); // TODO: this is limited to +/- 584 years
 
-		return std::chrono::floor< T >(t_sec + t_nsec);
+		return std::chrono::floor< T >(t_sec + t_nsec); // TODO: this is limited to +/- 584 years
 	}
 
 	template <typename Rep, typename Period>
 	static std::chrono::duration<Rep, Period> to_chrono(const timespec& dt)
 	{
 		std::chrono::seconds     t_sec(dt.tv_sec);
-		std::chrono::nanoseconds t_nsec(dt.tv_nsec);
+		std::chrono::nanoseconds t_nsec(dt.tv_nsec); // TODO: this is limited to +/- 584 years
 
-		return std::chrono::floor< std::chrono::duration<Rep, Period> >(t_sec + t_nsec);
+		return std::chrono::floor< std::chrono::duration<Rep, Period> >(t_sec + t_nsec); // TODO: this is limited to +/- 584 years
 	}
 };
