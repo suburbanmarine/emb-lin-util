@@ -81,6 +81,7 @@ bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8
 		return false;
 	}
 
+	out_inflate_data->clear();
 	auto inflate_cb = [&out_inflate_data](uint8_t const * const ptr, const size_t len)->bool
 	{
 		out_inflate_data->insert(out_inflate_data->end(), ptr, ptr+len);
@@ -96,6 +97,8 @@ bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::deque<uint8_
 	{
 		return false;
 	}
+
+	out_inflate_data->clear();
 
 	auto inflate_cb = [&out_inflate_data](uint8_t const * const ptr, const size_t len)->bool
 	{
