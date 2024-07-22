@@ -20,6 +20,7 @@ add_library(emb-lin-util
 
 	src/emb-lin-util.cpp
 
+	src/logging.cpp
 	src/version.cpp
 )
 
