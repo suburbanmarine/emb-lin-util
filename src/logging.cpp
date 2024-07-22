@@ -1,4 +1,6 @@
-#include <emb_lin_util/logging.hpp>
+#include <emb-lin-util/logging.hpp>
+
+#include <spdlog/spdlog.h>
 
 namespace emb_lin_util
 {
