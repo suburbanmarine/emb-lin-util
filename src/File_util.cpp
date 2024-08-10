@@ -66,6 +66,65 @@ bool File_util::readSmallFileToInt(char const * const filename, int* const out_v
 	return true;
 }
 
+bool File_util::readSmallFile(const std::string& filename, std::stringstream* const out_value)
+{
+	return readSmallFile(filename, std::numeric_limits<ssize_t>::max(), out_value);	
+}
+bool File_util::readSmallFile(const std::string& filename, const ssize_t max_to_read, std::stringstream* const out_value)
+{
+	if(max_to_read < 0)
+	{
+		return false;
+	}
+
+	if( ! out_value )
+	{
+		return false;
+	}
+	out_value->clear();
+
+	int fd = ::open(filename.c_str(), O_RDONLY | O_CLOEXEC);
+	if(fd < 0)
+	{
+		return false;
+	}
+
+	const off_t file_len = lseek(fd, 0, SEEK_END);
+	if(file_len < 0)
+	{
+		::close(fd);
+		return false;
+	}
+
+	if(lseek(fd, 0, SEEK_SET) < 0)
+	{
+		::close(fd);
+		return false;
+	}
+
+	std::vector<uint8_t> read_buf(8 * 4096);
+
+	const ssize_t num_to_read = std::min<ssize_t>(max_to_read, file_len);
+
+	ssize_t num_read = 0;
+	do
+	{
+		ssize_t ret = read(fd, read_buf.data(), std::min<ssize_t>(num_to_read - num_read, read_buf.size()));
+		if(ret < 0)
+		{		
+			::close(fd);
+			return false;
+		}
+
+		out_value->write((const char*)read_buf.data(), ret);
+
+		num_read += ret;
+	} while(num_read < num_to_read);
+
+	::close(fd);
+	return true;
+}
+
 bool File_util::readSmallFile(const std::string& filename, std::vector<uint8_t>* const out_value)
 {
 	return readSmallFile(filename, std::numeric_limits<ssize_t>::max(), out_value);

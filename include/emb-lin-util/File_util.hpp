@@ -30,6 +30,11 @@ public:
 	}
 
 	//read up to std::numeric_limits<ssize_t>::max() from a file
+	static bool readSmallFile(const std::string& filename, std::stringstream* const out_value);
+	//read up to max_to_read B from a file
+	static bool readSmallFile(const std::string& filename, const ssize_t max_to_read, std::stringstream* const out_value);
+
+	//read up to std::numeric_limits<ssize_t>::max() from a file
 	static bool readSmallFile(const std::string& filename, std::vector<uint8_t>* const out_value);
 	//read up to max_to_read B from a file
 	static bool readSmallFile(const std::string& filename, const ssize_t max_to_read, std::vector<uint8_t>* const out_value);
