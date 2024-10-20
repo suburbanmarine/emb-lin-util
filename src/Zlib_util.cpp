@@ -80,6 +80,23 @@ bool Zlib_util::deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8
 
 	return true;
 }
+bool Zlib_util::deflate_oneshot(std::vector<uint8_t>& in_data, std::deque<uint8_t>* const out_deflate_data)
+{
+	if( ! out_deflate_data )
+	{
+		return false;
+	}
+
+	out_deflate_data->clear();
+
+	auto deflate_cb = [&out_deflate_data](uint8_t const * const ptr, const size_t len)->bool
+	{
+		out_deflate_data->insert(out_deflate_data->end(), ptr, ptr+len);
+		return true;
+	};
+
+	return deflate(in_data.data(), in_data.size(), deflate_cb);
+}
 
 bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* const out_inflate_data)
 {
@@ -87,6 +104,9 @@ bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8
 	{
 		return false;
 	}
+
+	out_inflate_data->clear();
+	out_inflate_data->reserve(in_data.size());
 
 	auto inflate_cb = [&out_inflate_data](uint8_t const * const ptr, const size_t len)->bool
 	{
@@ -103,6 +123,8 @@ bool Zlib_util::inflate_oneshot(std::vector<uint8_t>& in_data, std::deque<uint8_
 	{
 		return false;
 	}
+
+	out_inflate_data->clear();
 
 	auto inflate_cb = [&out_inflate_data](uint8_t const * const ptr, const size_t len)->bool
 	{

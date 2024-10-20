@@ -20,6 +20,7 @@ add_library(emb-lin-util
 
 	src/emb-lin-util.cpp
 
+	src/logging.cpp
 	src/version.cpp
 )
 
@@ -28,6 +29,7 @@ target_link_libraries(emb-lin-util
 	rt
 
 	Boost::boost
+	date::date
 	nlohmann_json::nlohmann_json
 	spdlog::spdlog
 	ZLIB::ZLIB

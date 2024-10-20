@@ -17,10 +17,10 @@ public:
 
 
 	//read first line from file
-	static bool readSmallFile(char const * const filename, std::string* const out_value);
-	static bool readSmallFile(const std::string& filename, std::string* const out_value)
+	static bool readSmallFileLine(char const * const filename, std::string* const out_value);
+	static bool readSmallFileLine(const std::string& filename, std::string* const out_value)
 	{
-		return readSmallFile(filename.c_str(), out_value);
+		return readSmallFileLine(filename.c_str(), out_value);
 	}
 
 	//read first line from file and convert to int
@@ -30,8 +30,9 @@ public:
 		return readSmallFileToInt(filename.c_str(), out_value);
 	}
 
-	//read up to max_to_read B from a file
+	//read up to std::numeric_limits<ssize_t>::max() from a file
 	static bool readSmallFile(const std::string& filename, std::vector<uint8_t>* const out_value);
+	//read up to max_to_read B from a file
 	static bool readSmallFile(const std::string& filename, const ssize_t max_to_read, std::vector<uint8_t>* const out_value);
 
 	static bool writeSmallFile(const std::string& filename, const std::vector<uint8_t>& value)

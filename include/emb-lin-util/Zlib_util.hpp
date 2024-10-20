@@ -24,8 +24,9 @@ public:
 
 	bool init();
 
-	// out_deflate_data will be resized to fit using deflateBound
+	// deflateBound bytes will be temporarily allocated
 	bool deflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* const out_deflate_data);
+	bool deflate_oneshot(std::vector<uint8_t>& in_data, std::deque<uint8_t>* const out_deflate_data);
 	
 	bool inflate_oneshot(std::vector<uint8_t>& in_data, std::vector<uint8_t>* const out_inflate_data);
 	bool inflate_oneshot(std::vector<uint8_t>& in_data, std::deque<uint8_t>* const out_inflate_data);

@@ -18,7 +18,7 @@
 #include <fstream>
 #include <limits>
 
-bool File_util::readSmallFile(char const * const filename, std::string* const out_value)
+bool File_util::readSmallFileLine(char const * const filename, std::string* const out_value)
 {
 	if( ! out_value )
 	{
@@ -49,7 +49,7 @@ bool File_util::readSmallFileToInt(char const * const filename, int* const out_v
 	}
 
 	std::string file_data;
-	if( ! readSmallFile(filename, &file_data) )
+	if( ! readSmallFileLine(filename, &file_data) )
 	{
 		return false;
 	}
