@@ -11,6 +11,11 @@
 
 #include "emb-lin-util/emb-lin-util.hpp"
 
+#include <vector>
+#include <string>
+
+#include <cstring>
+
 namespace emblinutil
 {
 	std::shared_ptr<spdlog::logger> create_logger(const std::string& logger_name, const std::vector<spdlog::sink_ptr>& sinks)
@@ -31,6 +36,24 @@ namespace emblinutil
 	{
 		spdlog::register_logger(logger);
 		spdlog::set_default_logger(logger);
+	}
+
+	std::string errno_to_str()
+	{
+		return errno_to_str(errno);
+	}
+
+	std::string errno_to_str(const int err)
+	{
+		std::vector<char> temp;
+		temp.resize(1024);
+
+		strerror_r(err, temp.data(), temp.size());
+
+		return std::string(
+			temp.data(), 
+			strnlen(temp.data(), temp.size())
+		);
 	}
 }
 

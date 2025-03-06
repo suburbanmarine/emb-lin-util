@@ -23,4 +23,8 @@ namespace emblinutil
 
 	// NOT MT safe - call before using library
 	void register_logger(const std::shared_ptr<spdlog::logger>& logger);
+
+	std::string errno_to_str();
+	std::string errno_to_str(const int err);
 }
+
