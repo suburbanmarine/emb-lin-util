@@ -51,6 +51,25 @@ bool Signal_handler::mask_handled_signals()
 	return true;
 }
 
+bool Signal_handler::mask_def_stop_signals()
+{
+	sigset_t set;
+	if( ! make_def_stop_signal_mask(&set) )
+	{
+		SPDLOG_ERROR("Could not make signal mask");
+		return false;
+	}
+
+	int ret = pthread_sigmask(SIG_SETMASK, &set, NULL);
+	if(ret != 0)
+	{
+		SPDLOG_ERROR("Could not set signal mask");
+		return false;
+	}
+
+	return true;
+}
+
 bool Signal_handler::wait_for_signal(sigset_t* const set, const timespec& timeout)
 {
 	siginfo_t info;
@@ -165,6 +184,38 @@ bool Signal_handler::make_handled_signal_mask(sigset_t* const set)
 
 	//user 2
 	ret = sigaddset(set, SIGUSR2);
+	if(ret != 0)
+	{
+		return false;
+	}
+
+	//generic exit request
+	ret = sigaddset(set, SIGTERM);
+	if(ret != 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool Signal_handler::make_def_stop_signal_mask(sigset_t* const set)
+{
+	int ret = sigemptyset(set);
+	if(ret != 0)
+	{
+		return false;
+	}
+
+	//terminal hangup
+	ret = sigaddset(set, SIGHUP);
+	if(ret != 0)
+	{
+		return false;
+	}
+
+	// ctrl-c
+	ret = sigaddset(set, SIGINT);
 	if(ret != 0)
 	{
 		return false;

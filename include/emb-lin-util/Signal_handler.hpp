@@ -33,6 +33,9 @@ public:
 	//mask def signals, for main thread
 	bool mask_handled_signals();
 
+	//mask def signals, for main thread
+	bool mask_def_stop_signals();
+
 	//wait for signal
 	template <typename Rep, typename Period >
 	bool wait_for_signal(sigset_t* const set, const std::chrono::duration<Rep, Period>& timeout)
@@ -73,6 +76,8 @@ public:
 	}
 
 	bool make_handled_signal_mask(sigset_t* const set);
+
+	bool make_def_stop_signal_mask(sigset_t* const set);
 
 protected:
 
