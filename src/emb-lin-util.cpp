@@ -48,12 +48,29 @@ namespace emblinutil
 		std::vector<char> temp;
 		temp.resize(1024);
 
-		strerror_r(err, temp.data(), temp.size());
+		std::string msg;
 
-		return std::string(
-			temp.data(), 
-			strnlen(temp.data(), temp.size())
-		);
+		#ifdef _GNU_SOURCE
+			msg = strerror_r(err, temp.data(), temp.size());
+		#else
+
+			int ret = strerror_r(err, temp.data(), temp.size());
+
+			if(ret != 0)
+			{
+				msg = fmt::format("strerror_r error: {:d}", errno);
+			}
+			else
+			{
+				msg = std::string(
+					temp.data(), 
+					strnlen(temp.data(), temp.size())
+				);
+			}
+
+		#endif
+
+		return msg;
 	}
 }
 
