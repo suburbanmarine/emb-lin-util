@@ -70,6 +70,18 @@ bool Signal_handler::mask_def_stop_signals()
 	return true;
 }
 
+bool Signal_handler::mask_signals(sigset_t* const set)
+{
+	int ret = pthread_sigmask(SIG_SETMASK, set, NULL);
+	if(ret != 0)
+	{
+		SPDLOG_ERROR("Could not set signal mask");
+		return false;
+	}
+
+	return true;
+}
+
 bool Signal_handler::wait_for_signal(sigset_t* const set, const timespec& timeout)
 {
 	siginfo_t info;
